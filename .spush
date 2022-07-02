@@ -1,0 +1,10 @@
+{
+    "ignore": [
+        "/.git/",
+        "/CMakeFiles/",
+        "/CMakeCache.txt"
+    ],
+    "keep": [
+        "/.git/"
+    ]
+}
