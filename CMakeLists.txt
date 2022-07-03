@@ -1,8 +1,7 @@
 cmake_minimum_required(VERSION 3.16)
 
 project(Vector)
-
-set(EMBEDS "")
+enable_language(ASM)
 
 function(embed_resource target section file)
     get_filename_component(asm_file "${file}" NAME)
@@ -16,9 +15,7 @@ function(embed_resource target section file)
     )
     target_sources("${target}" PRIVATE "${asm_file}")
     add_custom_target("add_section_${section}" DEPENDS ${asm_file})
-    message(${asm_file})
-    set_property(SOURCE ${asm_file} PROPERTY LANGUAGE C)
-    set(EMBEDS ${EMBEDS} ${asm_file})
+    set_property(SOURCE ${asm_file} PROPERTY LANGUAGE ASM)
 endfunction()
 
 set(CMAKE_CXX_STANDARD 20)
@@ -33,23 +30,21 @@ include_directories(/usr/include)
 compile_gml(src/ExampleWindow.gml ExampleWindowGML.h example_window_gml)
 compile_gml(src/LoginDialog.gml LoginDialogGML.h login_dialog_gml)
 
-# Still working on embedding an icon
-
 set(SOURCES
+    Vector-serenity_icon_s.s
+    Vector-serenity_icon_m.s
     src/LoginDialog.h
     src/LoginDialog.cpp
     src/main.cpp
     ExampleWindowGML.h
     LoginDialogGML.h
-    Vector-serenity_icon_s.s
-    Vector-serenity_icon_m.s
 )
 
 add_executable(Vector ${SOURCES})
 add_dependencies(Vector add_section_serenity_icon_s add_section_serenity_icon_m)
 target_link_libraries(Vector gui core gcc_s gcc_eh)
 
-embed_resource(Vector serenity_icon_s "/res/icons/16x16/app-file-manager.png")
-embed_resource(Vector serenity_icon_m "/res/icons/32x32/app-file-manager.png")
+embed_resource(Vector serenity_icon_s "${CMAKE_SOURCE_DIR}/icon_s.png")
+embed_resource(Vector serenity_icon_m "${CMAKE_SOURCE_DIR}/icon_m.png")
 
 install(TARGETS Vector RUNTIME DESTINATION bin)
