@@ -84,7 +84,7 @@
 
             @GUI::Button {
                 name: "login_button"
-                text: "Log in"
+                text: "Log In"
                 fixed_width: 75
             }
 

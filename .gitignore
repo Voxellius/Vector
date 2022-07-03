@@ -1,10 +1,7 @@
 CMakeFiles/
+build/
 CMakeCache.txt
 Makefile
 cmake_install.cmake
-ExampleWindowGML.h
-LoginDialogGML.h
-Vector-serenity_icon_s.s
-Vector-serenity_icon_m.s
 Example
 a.out

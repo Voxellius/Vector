@@ -4,7 +4,8 @@ OUTPUT_FILE="$1"
 SECTION_NAME="$2"
 INPUT_FILE="$3"
 
-rm -f "$OUTPUT_FILE"
+mkdir -p "$OUTPUT_FILE"
+rm -rf "$OUTPUT_FILE"
 
 {
     printf "    .section %s\n" "$SECTION_NAME"

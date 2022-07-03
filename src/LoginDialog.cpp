@@ -5,7 +5,7 @@
 #include <LibGfx/Bitmap.h>
 
 #include "LoginDialog.h"
-#include "../LoginDialogGML.h"
+#include "../build/LoginDialogGML.h"
 
 LoginDialog::LoginDialog() {
     auto widget = MUST(try_set_main_widget<GUI::Widget>());

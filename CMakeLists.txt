@@ -5,7 +5,7 @@ enable_language(ASM)
 
 function(embed_resource target section file)
     get_filename_component(asm_file "${file}" NAME)
-    set(asm_file "${CMAKE_CURRENT_BINARY_DIR}/${target}-${section}.s")
+    set(asm_file "${CMAKE_CURRENT_BINARY_DIR}/build/${target}-${section}.s")
     get_filename_component(input_file "${file}" ABSOLUTE)
     add_custom_command(
         OUTPUT "${asm_file}"
@@ -27,17 +27,15 @@ include(${SerenityOS_SOURCE_DIR}/Meta/CMake/code_generators.cmake)
 add_custom_target(all_generated)
 include_directories(/usr/include)
 
-compile_gml(src/ExampleWindow.gml ExampleWindowGML.h example_window_gml)
-compile_gml(src/LoginDialog.gml LoginDialogGML.h login_dialog_gml)
+compile_gml(src/LoginDialog.gml build/LoginDialogGML.h login_dialog_gml)
 
 set(SOURCES
-    Vector-serenity_icon_s.s
-    Vector-serenity_icon_m.s
+    build/Vector-serenity_icon_s.s
+    build/Vector-serenity_icon_m.s
     src/LoginDialog.h
     src/LoginDialog.cpp
     src/main.cpp
-    ExampleWindowGML.h
-    LoginDialogGML.h
+    build/LoginDialogGML.h
 )
 
 add_executable(Vector ${SOURCES})

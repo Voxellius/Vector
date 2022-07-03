@@ -2,6 +2,7 @@
     "ignore": [
         "/.git/",
         "/CMakeFiles/",
+        "/build/",
         "/CMakeCache.txt"
     ],
     "keep": [
