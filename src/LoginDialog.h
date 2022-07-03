@@ -1,5 +1,6 @@
 #pragma once
 
+#include <AK/Function.h>
 #include <LibGUI/Widget.h>
 
 class LoginDialog final : public GUI::Window {
@@ -7,6 +8,8 @@ class LoginDialog final : public GUI::Window {
 
     public:
         virtual ~LoginDialog() override = default;
+
+        Function<void()> on_login_success;
 
     private:
         LoginDialog();

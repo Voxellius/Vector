@@ -5,6 +5,7 @@
 #include <LibGUI/MessageBox.h>
 
 #include "LoginDialog.h"
+#include "HubWindow.h"
 
 #include <stdio.h>
 
@@ -13,6 +14,11 @@
 int main(int argc, char* argv[]) {
     auto app = MUST(GUI::Application::try_create(argc, argv));
     auto window = MUST(LoginDialog::try_create());
+    auto hub_window = MUST(HubWindow::try_create());
+
+    window->on_login_success = [&]() {
+        hub_window->show();
+    };
 
     window->show();
 

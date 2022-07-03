@@ -3,7 +3,7 @@
 
     layout: @GUI::HorizontalBoxLayout {
         margins: [10]
-        spacing:10
+        spacing: 10
     }
 
     @GUI::Widget {

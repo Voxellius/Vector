@@ -28,14 +28,18 @@ add_custom_target(all_generated)
 include_directories(/usr/include)
 
 compile_gml(src/LoginDialog.gml build/LoginDialogGML.h login_dialog_gml)
+compile_gml(src/HubWindow.gml build/HubWindowGML.h hub_window_gml)
 
 set(SOURCES
     build/Vector-serenity_icon_s.s
     build/Vector-serenity_icon_m.s
     src/LoginDialog.h
     src/LoginDialog.cpp
+    src/HubWindow.h
+    src/HubWindow.cpp
     src/main.cpp
     build/LoginDialogGML.h
+    build/HubWindowGML.h
 )
 
 add_executable(Vector ${SOURCES})
