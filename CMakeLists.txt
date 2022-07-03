@@ -42,7 +42,7 @@ set(SOURCES
 
 add_executable(Vector ${SOURCES})
 add_dependencies(Vector add_section_serenity_icon_s add_section_serenity_icon_m)
-target_link_libraries(Vector gui core gcc_s gcc_eh)
+target_link_libraries(Vector gui gfx core gcc_s gcc_eh)
 
 embed_resource(Vector serenity_icon_s "${CMAKE_SOURCE_DIR}/icon_s.png")
 embed_resource(Vector serenity_icon_m "${CMAKE_SOURCE_DIR}/icon_m.png")
