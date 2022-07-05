@@ -11,6 +11,8 @@ class LoginDialog final : public GUI::Window {
 
         Function<void()> on_login_success;
 
+        void attempt_login();
+
     private:
         LoginDialog();
 };

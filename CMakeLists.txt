@@ -33,6 +33,8 @@ compile_gml(src/HubWindow.gml build/HubWindowGML.h hub_window_gml)
 set(SOURCES
     build/Vector-serenity_icon_s.s
     build/Vector-serenity_icon_m.s
+    src/Matrix.h
+    src/Matrix.cpp
     src/LoginDialog.h
     src/LoginDialog.cpp
     src/HubWindow.h
@@ -44,7 +46,7 @@ set(SOURCES
 
 add_executable(Vector ${SOURCES})
 add_dependencies(Vector add_section_serenity_icon_s add_section_serenity_icon_m)
-target_link_libraries(Vector gui gfx core gcc_s gcc_eh)
+target_link_libraries(Vector gui gfx core http gcc_s gcc_eh)
 
 embed_resource(Vector serenity_icon_s "${CMAKE_SOURCE_DIR}/icon_s.png")
 embed_resource(Vector serenity_icon_m "${CMAKE_SOURCE_DIR}/icon_m.png")

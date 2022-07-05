@@ -4,6 +4,7 @@
 #include <LibGUI/Button.h>
 #include <LibGUI/MessageBox.h>
 
+#include "Matrix.h"
 #include "LoginDialog.h"
 #include "HubWindow.h"
 
@@ -13,6 +14,7 @@
 
 int main(int argc, char* argv[]) {
     auto app = MUST(GUI::Application::try_create(argc, argv));
+
     auto window = MUST(LoginDialog::try_create());
     auto hub_window = MUST(HubWindow::try_create());
 
