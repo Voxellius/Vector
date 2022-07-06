@@ -35,26 +35,34 @@ Request::Request(AK::URL url, HTTP::HttpRequest::Method method, ByteBuffer body)
     };
 
     m_job->on_finish = [weak_this = make_weak_ptr()](bool success) mutable {
-        if (!success) {
-            dbgln("Unsuccessful request");
-
-            return;
-        }
-
         if (auto strong_this = weak_this.strong_ref()) {
             ReadonlyBytes response_bytes {
                 strong_this->m_output_stream->bytes().data(),
                 strong_this->m_output_stream->offset()
             };
 
+            if (!success) {
+                dbgln("Unsuccessful request");
+
+                CALLBACK(strong_this->on_failure)();
+
+                return;
+            }
+
             strong_this->m_completed;
             strong_this->m_response_buffer = ByteBuffer::copy(response_bytes).release_value();
 
-            if (strong_this->on_response) strong_this->on_response();
+            CALLBACK(strong_this->on_response)();
         }
     };
 
-    auto underlying_socket = MUST(TLS::TLSv12::connect(url.host(), url.port().value_or(443)));
+    auto underlying_socket_result = TLS::TLSv12::connect(url.host(), url.port().value_or(443));
+
+    if (m_socket_connection_failed = underlying_socket_result.is_error()) {
+        return;
+    }
+
+    auto underlying_socket = underlying_socket_result.release_value();
 
     MUST(underlying_socket->set_blocking(false));
 
@@ -66,6 +74,12 @@ ErrorOr<NonnullRefPtr<Request>> Request::create(AK::URL url, HTTP::HttpRequest::
 }
 
 void Request::start() {
+    if (m_socket_connection_failed) {
+        CALLBACK(on_failure)();
+
+        return;
+    }
+
     m_job->start(*m_socket);
 }
 
@@ -84,6 +98,10 @@ Error Matrix::get_error_from_code(String error_code) {
 
     if (error_code == "M_FORBIDDEN") {
         return Error::from_string_literal("The username or password used for authentication is incorrect");
+    }
+
+    if (error_code == "M_USER_DEACTIVATED") {
+        return Error::from_string_literal("The account was deactivated by the homeserver");
     }
 
     if (error_code == "M_INVALID_PARAM") {
@@ -127,6 +145,10 @@ void Matrix::attempt_login(String homeserver, String username, String password) 
     auto url = AK::URL(String::formatted("https://{}/_matrix/client/r0/login", homeserver));
 
     m_login_request = MUST(Request::create(url, HTTP::HttpRequest::Method::POST, login_json.to_byte_buffer()));
+
+    m_login_request->on_failure = [&]() {
+        CALLBACK(on_login_failure)("Could not connect to the homeserver, check the internet connection and try again");
+    };
 
     m_login_request->on_response = [&]() {
         // TODO: Add auth checks before indicating success

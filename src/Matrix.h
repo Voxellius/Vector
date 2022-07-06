@@ -14,6 +14,7 @@ class Request : public RefCounted<Request>, public Weakable<Request> {
         static ErrorOr<NonnullRefPtr<Request>> create(AK::URL url, HTTP::HttpRequest::Method method = HTTP::HttpRequest::Method::GET, ByteBuffer body = AK::String::empty().to_byte_buffer());
 
         Function<void()> on_response;
+        Function<void()> on_failure;
 
         void start();
 
@@ -31,6 +32,7 @@ class Request : public RefCounted<Request>, public Weakable<Request> {
         OwnPtr<Core::Stream::BufferedSocketBase> m_socket;
 
         bool m_completed;
+        bool m_socket_connection_failed;
         Optional<u32> m_response_code;
         Headers m_response_headers;
         ByteBuffer m_response_buffer;
