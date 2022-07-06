@@ -33,6 +33,7 @@ compile_gml(src/HubWindow.gml build/HubWindowGML.h hub_window_gml)
 set(SOURCES
     build/Vector-serenity_icon_s.s
     build/Vector-serenity_icon_m.s
+    src/common.h
     src/Matrix.h
     src/Matrix.cpp
     src/LoginDialog.h

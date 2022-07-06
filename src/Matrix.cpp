@@ -9,6 +9,7 @@
 #include <LibHTTP/HttpsJob.h>
 
 #include "Matrix.h"
+#include "common.h"
 
 Request::Request(AK::URL url, HTTP::HttpRequest::Method method, ByteBuffer body) {
     HTTP::HttpRequest request;
@@ -49,9 +50,7 @@ Request::Request(AK::URL url, HTTP::HttpRequest::Method method, ByteBuffer body)
             strong_this->m_completed;
             strong_this->m_response_buffer = ByteBuffer::copy(response_bytes).release_value();
 
-            if (strong_this->on_response) {
-                strong_this->on_response();
-            }
+            if (strong_this->on_response) strong_this->on_response();
         }
     };
 
@@ -70,10 +69,28 @@ void Request::start() {
     m_job->start(*m_socket);
 }
 
+Matrix::Matrix() {
+    m_is_logged_in = false;
+}
+
 Matrix& Matrix::the() {
     static Matrix matrix;
 
     return matrix;
+}
+
+Error Matrix::get_error_from_code(String error_code) {
+    dbgln("Error {} occurred", error_code);
+
+    if (error_code == "M_FORBIDDEN") {
+        return Error::from_string_literal("The username or password used for authentication is incorrect");
+    }
+
+    if (error_code == "M_INVALID_PARAM") {
+        return Error::from_string_literal("Vector made an invalid request (Vector may need updating)");
+    }
+
+    return Error::from_string_literal("An unknown error occurred");
 }
 
 String Matrix::construct_login_json(String username, String password) {
@@ -86,6 +103,25 @@ String Matrix::construct_login_json(String username, String password) {
     return object.to_string();
 }
 
+ErrorOr<void> Matrix::consume_login_json(String login_json) {
+    auto result = JsonValue::from_string(login_json);
+
+    if (result.is_error()) {
+        return Error::from_string_literal("Could not parse JSON response");
+    }
+
+    JsonObject object = result.release_value().as_object();
+
+    if (object.has("errcode")) {
+        return get_error_from_code(object.get("errcode").as_string());
+    }
+
+    m_is_logged_in = true;
+    m_access_token = object.get("access_token").as_string();
+
+    return {};
+}
+
 void Matrix::attempt_login(String homeserver, String username, String password) {
     auto login_json = Matrix::construct_login_json(username, password);
     auto url = AK::URL(String::formatted("https://{}/_matrix/client/r0/login", homeserver));
@@ -95,11 +131,15 @@ void Matrix::attempt_login(String homeserver, String username, String password) 
     m_login_request->on_response = [&]() {
         // TODO: Add auth checks before indicating success
 
-        dbgln("{}", AK::String::copy(m_login_request->get_response_buffer().bytes()));
+        auto result = consume_login_json(AK::String::copy(m_login_request->get_response_buffer().bytes()));
 
-        if (on_login_success) {
-            on_login_success();
+        if (result.is_error()) {
+            CALLBACK(on_login_failure)(result.release_error().string_literal());
+
+            return;
         }
+
+        CALLBACK(on_login_success)();
     };
 
     m_login_request->start();

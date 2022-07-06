@@ -9,10 +9,12 @@ class LoginDialog final : public GUI::Window {
     public:
         virtual ~LoginDialog() override = default;
 
-        Function<void()> on_login_success;
-
         void attempt_login();
+
+        Function<void()> on_login_success;
 
     private:
         LoginDialog();
+
+        void set_interface_locking(bool locked);
 };

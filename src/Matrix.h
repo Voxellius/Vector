@@ -46,13 +46,19 @@ class Matrix {
         static Matrix& the();
 
         void attempt_login(String homeserver, String username, String password);
+        bool is_logged_in() {return m_is_logged_in;}
 
         Function<void()> on_login_success;
+        Function<void(String)> on_login_failure;
 
     private:
-        Matrix() {}
+        Matrix();
 
+        static Error get_error_from_code(String error_code);
         static String construct_login_json(String username, String password);
+        ErrorOr<void> consume_login_json(String login_json);
 
+        bool m_is_logged_in;
+        String m_access_token;
         RefPtr<Request> m_login_request;
 };

@@ -8,8 +8,6 @@
 #include "LoginDialog.h"
 #include "HubWindow.h"
 
-#include <stdio.h>
-
 // TODO: Get `serenity_main` working instead of classic UNIX `main`
 
 int main(int argc, char* argv[]) {
