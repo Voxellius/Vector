@@ -2,6 +2,7 @@
 #include <AK/URL.h>
 #include <AK/JsonObject.h>
 #include <AK/JsonValue.h>
+#include <AK/Weakable.h>
 #include <LibCore/Stream.h>
 #include <LibCore/MemoryStream.h>
 #include <LibHTTP/HttpRequest.h>
@@ -9,12 +10,68 @@
 
 #include "Matrix.h"
 
-Matrix matrix;
+Request::Request(AK::URL url, HTTP::HttpRequest::Method method, ByteBuffer body) {
+    HTTP::HttpRequest request;
 
-Matrix::Matrix() {}
+    request.set_url(url);
+    request.set_method(method);
+    request.set_body(MUST(ByteBuffer::copy(body)));
 
-Matrix* Matrix::the() {
-    return &matrix;
+    m_stream_backing_buffer = MUST(ByteBuffer::create_uninitialized(1 * MiB));
+    m_output_stream = Core::Stream::MemoryStream::construct(m_stream_backing_buffer.bytes()).release_value();
+
+    m_job = HTTP::HttpsJob::construct(move(request), *m_output_stream);
+    m_completed = false;
+
+    m_job->on_headers_received = [weak_this = make_weak_ptr()](auto& response_headers, auto response_code) mutable {
+        if (auto strong_this = weak_this.strong_ref()) {
+            strong_this->m_response_code = response_code;
+
+            for (auto& header : response_headers) {
+                strong_this->m_response_headers.set(header.key, header.value);
+            }
+        }
+    };
+
+    m_job->on_finish = [weak_this = make_weak_ptr()](bool success) mutable {
+        if (!success) {
+            dbgln("Unsuccessful request");
+
+            return;
+        }
+
+        if (auto strong_this = weak_this.strong_ref()) {
+            ReadonlyBytes response_bytes {
+                strong_this->m_output_stream->bytes().data(),
+                strong_this->m_output_stream->offset()
+            };
+
+            strong_this->m_completed;
+            strong_this->m_response_buffer = ByteBuffer::copy(response_bytes).release_value();
+
+            if (strong_this->on_response) {
+                strong_this->on_response();
+            }
+        }
+    };
+
+    auto underlying_socket = MUST(Core::Stream::TCPSocket::connect(url.host(), url.port().value_or(443)));
+
+    m_socket = MUST(Core::Stream::BufferedTCPSocket::create(move(underlying_socket)));
+}
+
+ErrorOr<NonnullRefPtr<Request>> Request::create(AK::URL url, HTTP::HttpRequest::Method method, ByteBuffer body) {
+    return adopt_ref(*new Request(url, method, body));
+}
+
+void Request::start() {
+    m_job->start(*m_socket);
+}
+
+Matrix& Matrix::the() {
+    static Matrix matrix;
+
+    return matrix;
 }
 
 String Matrix::construct_login_json(String username, String password) {
@@ -27,42 +84,19 @@ String Matrix::construct_login_json(String username, String password) {
     return object.to_string();
 }
 
-void read() {
-    dbgln("Reading!");
-}
-
 void Matrix::attempt_login(String homeserver, String username, String password) {
     auto login_json = Matrix::construct_login_json(username, password);
-    auto url_str = String::formatted("https://{}/_matrix/client/r0/login", homeserver);
-    auto url = AK::URL(url_str);
+    auto url = AK::URL(String::formatted("https://{}/_matrix/client/r0/login", homeserver));
 
-    HTTP::HttpRequest request;
+    m_login_request = MUST(Request::create(url, HTTP::HttpRequest::Method::POST, login_json.to_byte_buffer()));
 
-    request.set_url(url);
-    request.set_method(HTTP::HttpRequest::Method::POST);
-    request.set_body(login_json.to_byte_buffer());
+    m_login_request->on_response = [&]() {
+        // TODO: Add auth checks before indicating success
 
-    auto backing_buffer = MUST(ByteBuffer::create_uninitialized(1 * MiB));
-    auto streamConstruction = Core::Stream::MemoryStream::construct(backing_buffer.bytes());
-    auto stream = *streamConstruction.value().ptr();
-    auto underlying_socket = MUST(Core::Stream::TCPSocket::connect(url.host(), url.port().value_or(443)));
-    auto socket = MUST(Core::Stream::BufferedSocket<Core::Stream::TCPSocket>::create(move(underlying_socket)));
-
-    job = HTTP::HttpsJob::construct(move(request), stream);
-
-    job->on_headers_received = [&](auto& response_headers, auto response_code) mutable {};
-
-    job->on_finish = [&](bool success) mutable {
-        if (success) {
-            dbgln("Success!");
-        } else {
-            dbgln("Not a success!");
+        if (on_login_success) {
+            on_login_success();
         }
     };
 
-    dbgln("Fine");
-
-    job->start(*socket.ptr());
-
-    dbgln("Okay");
+    m_login_request->start();
 }

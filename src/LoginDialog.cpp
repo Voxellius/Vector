@@ -23,15 +23,7 @@ LoginDialog::LoginDialog() {
     icon.load_from_file("/res/icons/32x32/key.png");
 
     login_button.on_click = [&](auto) {
-        // TODO: Add auth checks before reporting success
-
         attempt_login();
-
-        if (on_login_success) {
-            on_login_success();
-        }
-
-        close();
     };
 
     cancel_button.on_click = [&](auto) {
@@ -45,13 +37,19 @@ LoginDialog::LoginDialog() {
 }
 
 void LoginDialog::attempt_login() {
-    auto* matrix = Matrix::the();
+    auto& matrix = Matrix::the();
 
     auto& homeserver_input = *main_widget()->find_descendant_of_type_named<GUI::TextBox>("homeserver_input");
     auto& username_input = *main_widget()->find_descendant_of_type_named<GUI::TextBox>("username_input");
     auto& password_input = *main_widget()->find_descendant_of_type_named<GUI::TextBox>("password_input");
 
-    matrix->attempt_login(
+    matrix.on_login_success = [&]() {
+        on_login_success();
+
+        close();
+    };
+
+    matrix.attempt_login(
         homeserver_input.text(),
         username_input.text(),
         password_input.text()
