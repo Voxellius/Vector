@@ -46,7 +46,9 @@ set(SOURCES
 
 add_executable(Vector ${SOURCES})
 add_dependencies(Vector add_section_serenity_icon_s add_section_serenity_icon_m)
-target_link_libraries(Vector gui gfx core http gcc_s gcc_eh)
+add_library(crypto SHARED IMPORTED)
+set_property(TARGET crypto PROPERTY IMPORTED_LOCATION "/usr/lib/libcrypto.so")
+target_link_libraries(Vector gui gfx core crypto tls http gcc_s gcc_eh)
 
 embed_resource(Vector serenity_icon_s "${CMAKE_SOURCE_DIR}/icon_s.png")
 embed_resource(Vector serenity_icon_m "${CMAKE_SOURCE_DIR}/icon_m.png")

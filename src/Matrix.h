@@ -11,17 +11,16 @@ typedef HashMap<String, String, CaseInsensitiveStringTraits> Headers;
 
 class Request : public RefCounted<Request>, public Weakable<Request> {
     public:
-        static ErrorOr<NonnullRefPtr<Request>> create(AK::URL url, HTTP::HttpRequest::Method method = HTTP::HttpRequest::Method::GET, ByteBuffer body = AK::String("").to_byte_buffer());
+        static ErrorOr<NonnullRefPtr<Request>> create(AK::URL url, HTTP::HttpRequest::Method method = HTTP::HttpRequest::Method::GET, ByteBuffer body = AK::String::empty().to_byte_buffer());
 
         Function<void()> on_response;
 
         void start();
 
-    protected:
-        bool m_completed;
-        Optional<u32> m_response_code;
-        Headers m_response_headers;
-        ByteBuffer m_response_buffer;
+        bool is_completed() {return m_completed;}
+        Optional<u32> get_response_code() {return m_response_code;}
+        Headers get_response_headers() {return m_response_headers;}
+        ByteBuffer get_response_buffer() {return m_response_buffer;}
 
     private:
         Request(AK::URL, HTTP::HttpRequest::Method method, ByteBuffer body);
@@ -30,6 +29,11 @@ class Request : public RefCounted<Request>, public Weakable<Request> {
         ByteBuffer m_stream_backing_buffer;
         OwnPtr<Core::Stream::MemoryStream> m_output_stream;
         OwnPtr<Core::Stream::BufferedSocketBase> m_socket;
+
+        bool m_completed;
+        Optional<u32> m_response_code;
+        Headers m_response_headers;
+        ByteBuffer m_response_buffer;
 };
 
 class Matrix {

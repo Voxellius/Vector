@@ -55,9 +55,11 @@ Request::Request(AK::URL url, HTTP::HttpRequest::Method method, ByteBuffer body)
         }
     };
 
-    auto underlying_socket = MUST(Core::Stream::TCPSocket::connect(url.host(), url.port().value_or(443)));
+    auto underlying_socket = MUST(TLS::TLSv12::connect(url.host(), url.port().value_or(443)));
 
-    m_socket = MUST(Core::Stream::BufferedTCPSocket::create(move(underlying_socket)));
+    MUST(underlying_socket->set_blocking(false));
+
+    m_socket = MUST(Core::Stream::BufferedSocket<TLS::TLSv12>::create(move(underlying_socket)));
 }
 
 ErrorOr<NonnullRefPtr<Request>> Request::create(AK::URL url, HTTP::HttpRequest::Method method, ByteBuffer body) {
@@ -92,6 +94,8 @@ void Matrix::attempt_login(String homeserver, String username, String password) 
 
     m_login_request->on_response = [&]() {
         // TODO: Add auth checks before indicating success
+
+        dbgln("{}", AK::String::copy(m_login_request->get_response_buffer().bytes()));
 
         if (on_login_success) {
             on_login_success();
