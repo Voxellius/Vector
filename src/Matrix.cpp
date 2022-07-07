@@ -5,6 +5,7 @@
 #include <AK/Weakable.h>
 #include <LibCore/Stream.h>
 #include <LibCore/MemoryStream.h>
+//#include <LibConfig/Client.h>
 #include <LibHTTP/HttpRequest.h>
 #include <LibHTTP/HttpsJob.h>
 
@@ -84,7 +85,10 @@ void Request::start() {
 }
 
 Matrix::Matrix() {
-    m_is_logged_in = false;
+    // TODO: Try and get config to work without `ConfigServer`
+    m_access_token = ""; // Config::read_string("Vector", "Account", "AccessToken", "");
+
+    m_is_logged_in = m_access_token != "";
 }
 
 Matrix& Matrix::the() {
@@ -137,6 +141,8 @@ ErrorOr<void> Matrix::consume_login_json(String login_json) {
     m_is_logged_in = true;
     m_access_token = object.get("access_token").as_string();
 
+    // Config::write_string("Vector", "Account", "AccessToken", m_access_token);
+
     return {};
 }
 
@@ -144,6 +150,7 @@ void Matrix::attempt_login(String homeserver, String username, String password) 
     auto login_json = Matrix::construct_login_json(username, password);
     auto url = AK::URL(String::formatted("https://{}/_matrix/client/r0/login", homeserver));
 
+    m_homeserver = homeserver;
     m_login_request = MUST(Request::create(url, HTTP::HttpRequest::Method::POST, login_json.to_byte_buffer()));
 
     m_login_request->on_failure = [&]() {

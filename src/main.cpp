@@ -12,15 +12,20 @@
 
 int main(int argc, char* argv[]) {
     auto app = MUST(GUI::Application::try_create(argc, argv));
+    auto& matrix = Matrix::the();
 
-    auto window = MUST(LoginDialog::try_create());
+    auto login_dialog = MUST(LoginDialog::try_create());
     auto hub_window = MUST(HubWindow::try_create());
 
-    window->on_login_success = [&]() {
+    login_dialog->on_login_success = [&]() {
         hub_window->show();
     };
 
-    window->show();
+    if (matrix.is_logged_in()) {
+        hub_window->show();
+    } else {
+        login_dialog->show();
+    }
 
     return app->exec();
 }

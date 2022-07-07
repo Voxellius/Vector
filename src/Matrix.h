@@ -49,6 +49,7 @@ class Matrix {
 
         void attempt_login(String homeserver, String username, String password);
         bool is_logged_in() {return m_is_logged_in;}
+        String get_homeserver() {return m_homeserver;}
 
         Function<void()> on_login_success;
         Function<void(String)> on_login_failure;
@@ -61,6 +62,7 @@ class Matrix {
         ErrorOr<void> consume_login_json(String login_json);
 
         bool m_is_logged_in;
+        String m_homeserver;
         String m_access_token;
         RefPtr<Request> m_login_request;
 };
