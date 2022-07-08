@@ -85,7 +85,7 @@ void Request::start() {
 }
 
 Matrix::Matrix() {
-    // TODO: Try and get config to work without `ConfigServer`
+    // TODO: Store homeserver, too
     m_access_token = Config::read_string("Vector", "Account", "AccessToken", "");
 
     m_is_logged_in = m_access_token != "";
