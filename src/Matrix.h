@@ -48,11 +48,13 @@ class Matrix {
         static Matrix& the();
 
         void attempt_login(String homeserver, String username, String password);
+        void logout();
         bool is_logged_in() {return m_is_logged_in;}
         String get_homeserver() {return m_homeserver;}
 
         Function<void()> on_login_success;
         Function<void(String)> on_login_failure;
+        Function<void()> on_logout;
 
     private:
         Matrix();

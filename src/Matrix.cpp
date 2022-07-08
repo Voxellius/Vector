@@ -171,3 +171,9 @@ void Matrix::attempt_login(String homeserver, String username, String password) 
 
     m_login_request->start();
 }
+
+void Matrix::logout() {
+    Config::write_string("Vector", "Account", "AccessToken", "");
+
+    CALLBACK(on_logout)();
+}

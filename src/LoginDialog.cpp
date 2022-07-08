@@ -9,8 +9,8 @@
 
 #include "LoginDialog.h"
 #include "../build/LoginDialogGML.h"
-#include "Matrix.h"
 #include "common.h"
+#include "Matrix.h"
 
 LoginDialog::LoginDialog() {
     auto widget = MUST(try_set_main_widget<GUI::Widget>());

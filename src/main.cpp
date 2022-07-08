@@ -21,6 +21,11 @@ int main(int argc, char* argv[]) {
         hub_window->show();
     };
 
+    matrix.on_logout = [&]() {
+        hub_window->close();
+        login_dialog->show();
+    };
+
     if (matrix.is_logged_in()) {
         hub_window->show();
     } else {

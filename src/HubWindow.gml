@@ -7,7 +7,7 @@
 
     @GUI::ToolbarContainer {
         @GUI::Toolbar {
-            name: "main_toolbar"
+            name: "toolbar"
         }
     }
 
