@@ -159,7 +159,7 @@ void Matrix::attempt_login(String homeserver, String username, String password) 
     };
 
     m_login_request->on_response = [&]() {
-        auto result = consume_login_json(AK::String::copy(m_login_request->get_response_buffer().bytes()));
+        auto result = consume_login_json(String::copy(m_login_request->get_response_buffer().bytes()));
 
         if (result.is_error()) {
             CALLBACK(on_login_failure)(result.release_error().string_literal());
@@ -177,4 +177,52 @@ void Matrix::logout() {
     Config::write_string("Vector", "Account", "AccessToken", "");
 
     CALLBACK(on_logout)();
+}
+
+ErrorOr<void> Matrix::consume_sync_json(String sync_json) {
+    auto result = JsonValue::from_string(sync_json);
+
+    if (result.is_error()) {
+        return Error::from_string_literal("Could not parse JSON response");
+    }
+
+    JsonObject object = result.release_value().as_object();
+
+    if (object.has("errcode")) {
+        return get_error_from_code(object.get("errcode").as_string());
+    }
+
+    return {};
+}
+
+ErrorOr<void> Matrix::sync(String since) {
+    if (!m_is_logged_in) {
+        return Error::from_string_literal("Not logged in, and auth is required to sync");
+    }
+
+    auto encoded_access_token = AK::URL::percent_encode(m_access_token, AK::URL::PercentEncodeSet::Component);
+
+    auto url = AK::URL(
+        since != "" ?
+        String::formatted("https://{}/_matrix/client/r0/sync?since={}&access_token={}", m_homeserver, since, encoded_access_token) :
+        String::formatted("https://{}/_matrix/client/r0/sync?access_token={}", m_homeserver, encoded_access_token)
+    );
+
+    m_sync_request = MUST(Request::create(url, HTTP::HttpRequest::Method::GET));
+
+    m_sync_request->on_response = [&]() {
+        auto result = consume_sync_json(String::copy(m_sync_request->get_response_buffer().bytes()));
+
+        if (result.is_error()) {
+            CALLBACK(on_sync_failure)(result.release_error().string_literal());
+
+            return;
+        }
+
+        CALLBACK(on_sync_success)();
+    };
+
+    m_sync_request->start();
+
+    return {};
 }

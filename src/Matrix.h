@@ -49,12 +49,15 @@ class Matrix {
 
         void attempt_login(String homeserver, String username, String password);
         void logout();
+        ErrorOr<void> sync(String since = "");
         bool is_logged_in() {return m_is_logged_in;}
         String get_homeserver() {return m_homeserver;}
 
         Function<void()> on_login_success;
         Function<void(String)> on_login_failure;
         Function<void()> on_logout;
+        Function<void()> on_sync_success;
+        Function<void(String)> on_sync_failure;
 
     private:
         Matrix();
@@ -62,9 +65,11 @@ class Matrix {
         static Error get_error_from_code(String error_code);
         static String construct_login_json(String username, String password);
         ErrorOr<void> consume_login_json(String login_json);
+        ErrorOr<void> consume_sync_json(String sync_json);
 
         bool m_is_logged_in;
         String m_homeserver;
         String m_access_token;
         RefPtr<Request> m_login_request;
+        RefPtr<Request> m_sync_request;
 };

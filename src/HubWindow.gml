@@ -12,6 +12,6 @@
     }
 
     @GUI::TreeView {
-        name: "rooms_tree"
+        name: "tree"
     }
 }

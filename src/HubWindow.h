@@ -1,6 +1,7 @@
 #pragma once
 
 #include <LibGUI/Widget.h>
+#include <LibGUI/TreeViewModel.h>
 
 class HubWindow final : public GUI::Window {
     C_OBJECT(HubWindow)
@@ -8,6 +9,10 @@ class HubWindow final : public GUI::Window {
     public:
         virtual ~HubWindow() override = default;
 
+        void sync();
+
     private:
         HubWindow();
+
+        RefPtr<GUI::TreeViewModel> m_tree_model;
 };
