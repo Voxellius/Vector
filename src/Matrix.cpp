@@ -85,8 +85,8 @@ void Request::start() {
 }
 
 Matrix::Matrix() {
-    // TODO: Store homeserver, too
     m_access_token = Config::read_string("Vector", "Account", "AccessToken", "");
+    m_homeserver = Config::read_string("Vector", "Account", "Homeserver", "matrix.org");
 
     m_is_logged_in = m_access_token != "";
 }
@@ -142,6 +142,7 @@ ErrorOr<void> Matrix::consume_login_json(String login_json) {
     m_access_token = object.get("access_token").as_string();
 
     Config::write_string("Vector", "Account", "AccessToken", m_access_token);
+    Config::write_string("Vector", "Account", "Homeserver", m_homeserver);
 
     return {};
 }
